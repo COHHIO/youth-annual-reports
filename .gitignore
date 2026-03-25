@@ -1,3 +1,6 @@
 /.quarto/
 /_output/
 /data/
+.Renviron
+
+**/*.quarto_ipynb

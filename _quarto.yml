@@ -17,8 +17,6 @@ format:
       - assets/typst-show.typ
       - assets/typst-template.typ
     toc: true
-    lof: true
-    lot: true
     background-img:
       path: assets/www/background.jpg
     header-logo:

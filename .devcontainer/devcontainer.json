@@ -22,7 +22,7 @@
 		// Note: httpgd has been archived on CRAN as of 2025-04-23, see
 		// https://cran.r-project.org/web/packages/httpgd/index.html
 		"ghcr.io/rocker-org/devcontainer-features/r-packages:1": {
-			"packages": "dplyr, tidyr, ggplot2, github::nx10/httpgd, languageserver, rmarkdown, gt, lubridate, quarto",
+			"packages": "dplyr, tidyr, ggplot2, github::nx10/httpgd, languageserver, rmarkdown, gt, lubridate, quarto, DBI, RPostgres",
 			"installSystemRequirements": true
 		}
 
@@ -67,7 +67,8 @@
 				"quarto.quarto",
 				"posit.air-vscode",
 				"RDebugger.r-debugger",
-				"REditorSupport.r"
+				"REditorSupport.r",
+				"anthropic.claude-code"
 			]
 		}
 	},
