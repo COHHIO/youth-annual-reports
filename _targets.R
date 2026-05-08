@@ -68,4 +68,64 @@ list(
         name = dm,
         command = build_report_dm(config, raw_dm)
     ),
+    tar_target(
+        name = client_count_per_period,
+        command = counts_per_period(dm$client)
+    ),
+    tar_target(
+        name = enrollment_count_per_period,
+        command = counts_per_period(dm$enrollment)
+    ),
+    tar_target(
+        name = exit_count_per_period,
+        command = counts_per_period(dm$exit)
+    ),
+    tar_target(
+        name = client,
+        command = process_client_data(dm)
+    ),
+    tar_target(
+        name = hoh_and_or_adult,
+        command = process_hoh_and_or_adult_data(client)
+    ),
+    tar_target(
+        name = gender,
+        command = process_gender_data(dm)
+    ),
+    tar_target(
+        name = ethnicity,
+        command = process_ethnicity_data(dm)
+    ),
+    tar_target(
+        name = income,
+        command = process_income_data(dm, hoh_and_or_adult)
+    ),
+    tar_target(
+        name = benefits,
+        command = process_benefits_data(dm, hoh_and_or_adult)
+    ),
+    tar_target(
+        name = health_insurance,
+        command = process_health_insurance_data(dm)
+    ),
+    tar_target(
+        name = domestic_violence,
+        command = process_domestic_violence_data(dm, hoh_and_or_adult)
+    ),
+    tar_target(
+        name = education,
+        command = process_education_data(dm, hoh_and_or_adult)
+    ),
+    tar_target(
+        name = health,
+        command = process_health_data(dm, hoh_and_or_adult)
+    ),
+    tar_target(
+        name = employment,
+        command = process_employment_data(dm, hoh_and_or_adult)
+    ),
+    tar_target(
+        name = exit,
+        command = process_exit_data(dm, hoh_and_or_adult)
+    ),
 )
