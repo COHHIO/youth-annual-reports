@@ -1,4 +1,8 @@
-get_annual_report_data <- function(config) {
+read_config <- function(config_filepath) {
+    yaml::read_yaml(config_filepath)
+}
+
+fetch_dm <- function(config) {
     sources <- unique(unlist(config$period_source_map))
 
     connections <- setNames(
@@ -18,8 +22,9 @@ get_annual_report_data <- function(config) {
     all_tables <- unique(unlist(lapply(connections, DBI::dbListTables)))
 
     dm <- lapply(setNames(all_tables, all_tables), function(tbl) {
-        message(tbl)
         tables_per_conn <- lapply(names(connections), function(src) {
+            message("Reading ", src, " ", tbl)
+
             conn <- connections[[src]]
             if (!DBI::dbExistsTable(conn, tbl)) {
                 return(NULL)
@@ -31,15 +36,47 @@ get_annual_report_data <- function(config) {
         dplyr::bind_rows(tables_per_conn) |>
             tibble::as_tibble()
     })
+}
 
+build_report_dm <- function(config, raw_dm) {
     # Enrich tables in dm with project and organization info
-    project_lookup <- dm$project |>
-        dplyr::select(project_id, source, project_name)
+    project_lookup <- raw_dm$project |>
+        dplyr::select(project_id, source, project_name) |>
+        dplyr::mutate(
+            project_name = project_name |>
+                dplyr::replace_values(
+                    "zzFairfield - Lancaster Fairfield CAA - ODH Youth RRH" ~ "Fairfield - Lancaster Fairfield CAA - ODH Youth RRH",
+                    "ODH RRH (Family Promise)" ~ "Family Promise ODH RRH",
+                    "Lavender Landing LGBTQ Youth HP ODH (CANAPI)" ~ "Lavender Landing LGBTQ Youth ODH HP",
+                    "Lavender Landing LGBTQ Youth ODH HP (CANAPI)" ~ "Lavender Landing LGBTQ Youth ODH HP",
+                    "ODH Central Intake HP" ~ "Central Intake ODH HP",
+                )
+        )
 
-    organization_lookup <- dm$organization |>
-        dplyr::select(organization_id, source, organization_name)
+    organization_lookup <- raw_dm$organization |>
+        dplyr::select(organization_id, source, organization_name) |>
+        dplyr::mutate(
+            organization_name = organization_name |>
+                dplyr::replace_values(
+                    "Community Action Program Commission of the Lancast" ~ "Community Action Program Commission of the Lancaster Fairfield County Area",
+                    "Family Promise ODH RRH" ~ "Family Promise",
+                    "ODH RRH (Family Promise)" ~ "Family Promise",
+                    "Harmony ODH Emergency Shelter (Harmony House)" ~ "Harmony House",
+                    "Lavender Landing LGBTQ Youth HP ODH (CANAPI)" ~ "CANAPI",
+                    "Lavender Landing LGBTQ Youth ODH HP (CANAPI)" ~ "CANAPI",
+                    "Street Outreach Services  (Shelter Care)" ~ "Shelter Care",
+                    "Street Outreach Services RHY (Shelter Care)" ~ "Shelter Care",
+                    "ODH Central Intake HP" ~ "United Way of Summit Medina (UWSM)",
+                    "Central Intake ODH HP (UWSM)" ~ "United Way of Summit Medina (UWSM)",
+                    "Toledo Lucas County Homelessness Board / Toledo HM" ~ "Toledo Lucas County Homelessness Board / Toledo HMIS",
+                    "Infant Vitality Project ODH (GJCF)" ~ "Gus Johnson Community Foundation INC",
+                    "Infant Vitality Project ODH TH (GJCF)" ~ "Gus Johnson Community Foundation INC",
+                    "Youth Homelessness Street Outreach ODH (CoC)" ~ "Youth Homelessness Street Outreach",
+                    "Youth Homelessness Street Outreach ODH (SCCoC)" ~ "Youth Homelessness Street Outreach"
+                )
+        )
 
-    dm <- lapply(dm, function(tbl) {
+    dm <- lapply(raw_dm, function(tbl) {
         if (("project_id" %in% names(tbl)) && (!"project_name" %in% names(tbl))) {
             tbl <- dplyr::left_join(
                 tbl,
@@ -100,7 +137,7 @@ get_annual_report_data <- function(config) {
     )
 
     # Filter dm tables to keep only rows represented in served_data
-    served_dm <- lapply(dm, function(tbl) {
+    report_dm <- lapply(dm, function(tbl) {
         if ("enrollment_id" %in% names(tbl)) {
             served_lookup <- served_data |>
                 dplyr::select(
@@ -159,6 +196,4 @@ get_annual_report_data <- function(config) {
             tbl
         }
     })
-
-    saveRDS(served_dm, paste0("data/", min(period_years), "_", max(period_years), ".RDS"))
 }

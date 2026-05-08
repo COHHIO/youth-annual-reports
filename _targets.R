@@ -51,4 +51,21 @@ tar_source()
 
 # Replace the target list below with your own:
 list(
+    tar_target(
+        name = config_filepath,
+        command = "_config.yml",
+        format = "file"
+    ),
+    tar_target(
+        name = config,
+        command = read_config(config_filepath)
+    ),
+    tar_target(
+        name = raw_dm,
+        command = fetch_dm(config)
+    ),
+    tar_target(
+        name = dm,
+        command = build_report_dm(config, raw_dm)
+    ),
 )
