@@ -128,4 +128,10 @@ list(
         name = exit,
         command = process_exit_data(dm, hoh_and_or_adult)
     ),
+    # Render the report to "_output/"
+    tar_quarto(
+        name = report,
+        path = "report.qmd",
+        execute_params = list(period = "2024")
+    )
 )

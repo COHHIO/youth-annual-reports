@@ -1,0 +1,505 @@
+---
+title: Annual Report
+subtitle: "`r params$period`"
+format: typst
+params:
+    period: NULL
+execute:
+    echo: false
+engine: knitr
+---
+
+```{r}
+dm <- targets::tar_read(dm)
+```
+
+```{r}
+source("R/utils.R")
+source("R/utils_disabilities.R")
+source("R/utils_exit.R")
+```
+
+`#show table: set block(breakable: true)`{=typst}
+
+# Overview
+
+## Youth Served
+
+A youth is considered served during a period if both of the following conditions are met:
+
+- The youth's entry date is on or before the period end date
+- The youth either exited during the period or remains active at the period end date
+
+For example, for the 2022–2023 period (July 1, 2022 - June 30, 2023), a youth must have entered on or before June 30, 2023, and either exited on or after July 1, 2022, or still be active as of June 30, 2023.
+
+```{r}
+#| label: tbl-youth-served
+#| tbl-cap: "Total Youth Served, by Period"
+clients_per_period <- targets::tar_read(client_count_per_period)
+
+clients_per_period |>
+    gt::gt() |>
+    gt::cols_label(period = "Period")
+```
+
+Youth served multiple times — whether across projects within the same organization or within the same project — are counted only once. However, youth who appear across projects from different organizations cannot be deduplicated, so they may be counted more than once.
+
+## Gender
+
+Gender is a multiple-choice field, so a youth may be counted under more than one category. Percentages are calculated as a share of total youth served in each period and may sum to more than 100%.
+
+```{r}
+#| label: tbl-youth-gender
+#| tbl-cap: "Gender Identity of Youth Served, by Period"
+targets::tar_read(gender) |>
+    count_by_period(gender, clients_per_period) |>
+    gt::gt() |>
+    gt::cols_label(gender = "Gender")
+```
+
+## Age
+
+For each youth, age is calculated at the time of their first entry into any project within the period. If a youth entered multiple projects during the same period, only the earliest entry date is used to determine their age.
+
+```{r}
+#| label: tbl-youth-age
+#| tbl-cap: "Age of Youth at Program Entry, by Period"
+targets::tar_read(client) |>
+    count_by_period(age_grouped, clients_per_period) |>
+    gt::gt() |>
+    gt::cols_label(age_grouped = "Age")
+```
+
+## Ethnicity
+
+Ethnicity is a multiple-choice field, so a youth may be counted under more than one category. Percentages are calculated as a share of total youth served in each period and may sum to more than 100%.
+
+```{=typst}
+#show table: set text(size: 10pt)
+```
+
+```{r}
+#| label: tbl-youth-ethnicity
+#| tbl-cap: "Ethnicity of Youth Served, by Period"
+targets::tar_read(ethnicity) |>
+    count_by_period(ethnicity, clients_per_period) |>
+    gt::gt() |>
+    gt::cols_label(ethnicity = "Ethnicity")
+```
+
+```{=typst}
+#show table: set text(size: 11pt)
+```
+
+## Veteran Status
+
+The table below shows the number of participants who reported being a veteran in each reporting period. As with the overall youth count, veterans served across projects from different organizations may be counted more than once.
+
+```{r}
+#| label: tbl-youth-veteran-status
+#| tbl-cap: "Number of Veterans Served, by Period"
+dm$client |>
+    dplyr::filter(veteran_status == "Yes") |>
+    dplyr::count(period) |>
+    gt::gt() |>
+    gt::cols_label(period = "Period", n = "Veterans Served")
+```
+
+## Enrollments
+
+Youth can be enrolled in more than one project, or even in the same project more than once within a given period. Since enrollment data will be analyzed in more detail later, it is useful to first look at how youth are distributed by their number of enrollments per period.
+
+```{r}
+#| label: tbl-youth-enrollments
+#| tbl-cap: "Number of Youth by Program Enrollment Count, by Period"
+dm$client |>
+    dplyr::count(period, n_enrollments) |>
+    tidyr::pivot_wider(names_from = period, values_from = n, values_fill = 0) |>
+    dplyr::arrange(n_enrollments) |>
+    gt::gt() |>
+    gt::cols_label(n_enrollments = "Enrollments")
+```
+
+The following table shows the total number of enrollments per period, which reflects all enrollments across projects rather than the number of unique youth.
+
+```{r}
+#| label: tbl-enrollments
+#| tbl-cap: "Total Program Enrollments, by Period"
+enrollment_count_per_period <- targets::tar_read(enrollment_count_per_period)
+
+enrollment_count_per_period |>
+    gt::gt() |>
+    gt::cols_label(period = "Period")
+```
+
+For a detailed breakdown of enrollments by project, see the [Appendix](#appendix).
+
+Head of household and adult enrollments are highlighted separately because several survey items in subsequent sections are administered only to this group. A participant is included in this group if they are 18 or older, or if they are listed as the head of their household. The table below shows these counts by period.
+
+```{r}
+#| label: tbl-enrollments-hoh-adults
+#| tbl-cap: "Program Enrollments for Adults and Heads of Household, by Period"
+hoh_and_or_adult <- targets::tar_read(hoh_and_or_adult)
+
+dm$enrollment |>
+    dplyr::semi_join(
+        y = hoh_and_or_adult,
+        by = c("personal_id", "organization_id", "period")
+    ) |>
+    dplyr::count(period, name = "N") |>
+    gt::gt() |>
+    gt::cols_label(period = "Period")
+```
+
+## Exits
+
+An exit is recorded when a youth leaves a project. The table below shows the total number of exits per period across all projects.
+
+```{r}
+#| label: tbl-exits
+#| tbl-cap: "Total Program Exits, by Period"
+exit_count_per_period <- targets::tar_read(exit_count_per_period)
+
+exit_count_per_period |>
+    gt::gt() |>
+    gt::cols_label(period = "Period")
+```
+
+As with enrollments, head of household and adult exits are shown separately below, since several survey items are collected at exit for this group only.
+
+```{r}
+#| label: tbl-exits-hoh-adults
+#| tbl-cap: "Program Exits for Adults and Heads of Household, by Period"
+dm$exit |>
+    dplyr::semi_join(
+        y = hoh_and_or_adult,
+        by = c("personal_id", "organization_id", "period")
+    ) |>
+    dplyr::count(period, name = "N") |>
+    gt::gt() |>
+    gt::cols_label(period = "Period")
+```
+
+```{=typst}
+#pagebreak()
+#set page(flipped: true)
+#show table: set text(size: 8pt)
+```
+
+# Data Elements Analysis
+
+## Income, Benefits and Insurance
+
+### Income and Sources
+
+Income information is collected when participants enter the program ("Start") and when they leave ("Exit"). It is required for participants who are 18 or older, or who are listed as the head of their household. The first table shows whether participants reported having income from any source. The second table is limited to participants who reported having income and shows whether any of it came from employment.
+
+```{r}
+income <- targets::tar_read(income)
+```
+
+```{r}
+#| label: tbl-income-any-source
+#| tbl-cap: "Income from Any Source at Program Entry and Exit, by Period"
+make_start_exit_table(
+    income$start,
+    income$exit,
+    "income_from_any_source",
+    "Income from Any Source"
+)
+```
+
+```{r}
+#| label: tbl-income-earned
+#| tbl-cap: "Earned Income at Program Entry and Exit (Youth Reporting Any Income Only), by Period"
+make_start_exit_table(
+    income$start |> dplyr::filter(income_from_any_source == "Yes"),
+    income$exit |> dplyr::filter(income_from_any_source == "Yes"),
+    "earned",
+    "Earned Income"
+)
+```
+
+### Non-Cash Benefits
+
+Non-cash benefits include programs such as SNAP (food stamps), WIC, and TANF-funded services that provide goods or assistance rather than direct cash payments. This information is collected when participants enter and when they leave the program. It is required for participants who are 18 or older, or who are listed as the head of their household.
+
+```{r}
+#| label: tbl-benefits-any-source
+#| tbl-cap: "Non-Cash Benefits from Any Source at Program Entry and Exit, by Period"
+benefits <- targets::tar_read(benefits)
+
+make_start_exit_table(
+    benefits$start,
+    benefits$exit,
+    "benefits_from_any_source",
+    "Benefits from Any Source"
+)
+```
+
+### Health Insurance
+
+Health insurance coverage is collected when participants enter and when they leave the program. Unlike income and benefits, this information is required for all participants, regardless of age or household role.
+
+```{r}
+#| label: tbl-health-insurance
+#| tbl-cap: "Health Insurance Coverage at Program Entry and Exit, by Period"
+health_insurance <- targets::tar_read(health_insurance)
+
+make_start_exit_table(
+    health_insurance$start,
+    health_insurance$exit,
+    "insurance_from_any_source",
+    "Health Insurance from Any Source"
+)
+```
+
+```{=typst}
+#pagebreak()
+```
+
+## Health Conditions and Disabilities
+
+Health condition and disability information is collected when participants enter and when they leave the program. It is required for all participants.
+
+The table below shows only participants who reported having each condition; those who reported not having it or did not respond are excluded.
+
+Each condition is reported separately: the percentage shown is the share of participants with that condition out of all enrollments (at program entry) or exits (at program exit) in the given period. Because each condition is assessed independently, values across rows should not be added together.
+
+Substance Use Disorder includes participants who reported a drug use disorder, an alcohol use disorder, or both.
+
+```{r}
+#| label: tbl-disabilities
+#| tbl-cap: "Health Conditions and Disabilities at Program Entry and Exit, by Period"
+make_disabilites_start_exit_table(dm, enrollment_count_per_period, exit_count_per_period)
+```
+
+## Domestic Violence
+
+This information is collected when participants enter the program and is required for participants who are 18 or older, or who are listed as the head of their household. It captures whether a participant has experienced domestic violence or sexual assault.
+
+```{r}
+#| label: tbl-domestic-violence
+#| tbl-cap: "History of Domestic Violence or Sexual Assault at Program Entry, by Period"
+domestic_violence <- targets::tar_read(domestic_violence)
+
+make_period_table(
+    domestic_violence,
+    "domestic_violence_victim",
+    "Domestic Violence Victim / Survivor"
+)
+```
+
+## Education
+
+Education information is collected when participants enter and when they leave the program. It is required for participants who are 18 or older, or who are listed as the head of their household. The first table shows the highest level of education completed; the second shows current school enrollment status.
+
+```{r}
+education <- targets::tar_read(education)
+```
+
+```{r}
+#| label: tbl-education-grade
+#| tbl-cap: "Highest Education Level Completed at Program Entry and Exit, by Period"
+make_start_exit_table(
+    education$start,
+    education$exit,
+    "last_grade_completed_grouped",
+    "Last Grade Completed"
+)
+```
+
+```{r}
+#| label: tbl-education-school-status
+#| tbl-cap: "School Enrollment Status at Program Entry and Exit, by Period"
+make_start_exit_table(
+    education$start,
+    education$exit,
+    "school_status",
+    "School Status"
+)
+```
+
+## Employment Status
+
+Employment status is collected when participants enter and when they leave the program. It is required for participants who are 18 or older, or who are listed as the head of their household.
+
+```{r}
+#| label: tbl-employment
+#| tbl-cap: "Employment Status at Program Entry and Exit, by Period"
+employment <- targets::tar_read(employment)
+
+make_start_exit_table(
+    employment$start,
+    employment$exit,
+    "employed",
+    "Employed"
+)
+```
+
+## Health Status
+
+Self-reported health status across three areas — general, dental, and mental health — is collected when participants enter and when they leave the program. This information is required for participants who are 18 or older, or who are listed as the head of their household.
+
+```{r}
+#| label: tbl-health-general
+#| tbl-cap: "General Health Status at Program Entry and Exit, by Period"
+health <- targets::tar_read(health)
+
+make_start_exit_table(
+    health$start,
+    health$exit,
+    "general_health_status",
+    "General Health Status"
+)
+```
+
+```{r}
+#| label: tbl-health-dental
+#| tbl-cap: "Dental Health Status at Program Entry and Exit, by Period"
+make_start_exit_table(
+    health$start,
+    health$exit,
+    "dental_health_status",
+    "Dental Health Status"
+)
+```
+
+```{r}
+#| label: tbl-health-mental
+#| tbl-cap: "Mental Health Status at Program Entry and Exit, by Period"
+make_start_exit_table(
+    health$start,
+    health$exit,
+    "mental_health_status",
+    "Mental Health Status"
+)
+```
+
+## Commercial Sexual Exploitation / Sex Trafficking
+
+These questions are asked when participants leave the program and are required for participants who are 18 or older, or who are listed as the head of their household. The first table shows whether a participant reported exchanging sex for resources such as shelter, food, or money. The second table is limited to those who responded "Yes" and shows whether they reported being asked or forced to do so.
+
+```{r}
+exit <- targets::tar_read(exit)
+```
+
+```{r}
+#| label: tbl-sex-exchange
+#| tbl-cap: "Exchange of Sex for Resources at Program Exit, by Period"
+make_period_table(
+    exit,
+    "exchange_for_sex",
+    "Exchange for Sex"
+)
+```
+
+```{r}
+#| label: tbl-sex-forced
+#| tbl-cap: "Coercion into Sex Exchange at Program Exit (Youth Reporting Exchange for Sex Only), by Period"
+make_period_table(
+    exit |> dplyr::filter(exchange_for_sex == "Yes"),
+    "asked_or_forced_to_exchange_for_sex",
+    "Asked or Forced to Exchange for Sex"
+)
+```
+
+## Labor Exploitation / Trafficking
+
+These questions are asked when participants leave the program and are required for participants who are 18 or older, or who are listed as the head of their household. They capture indicators of labor exploitation, including workplace threats, whether the work differed from what was originally promised, and whether the participant was pressured to continue working.
+
+```{r}
+#| label: tbl-labor-violence
+#| tbl-cap: "Workplace Violence or Threats at Program Exit, by Period"
+make_period_table(
+    exit,
+    "work_place_violence_threats",
+    "Workplace Violence / Threats"
+)
+```
+
+```{r}
+#| label: tbl-labor-promise
+#| tbl-cap: "Discrepancy Between Work Promised and Work Provided at Program Exit, by Period"
+make_period_table(
+    exit,
+    "workplace_promise_difference",
+    "Work Differed from What Was Promised"
+)
+```
+
+```{r}
+#| label: tbl-labor-coerced
+#| tbl-cap: "Coercion to Continue Working at Program Exit, by Period"
+make_period_table(
+    exit,
+    "coerced_to_continue_work",
+    "Coerced to Continue Work"
+)
+```
+
+## Program Completion Status
+
+Program completion status is recorded when a participant leaves the program. It captures whether the participant completed the program as planned, chose to leave early, or was discharged involuntarily. This information is required for participants who are 18 or older, or who are listed as the head of their household.
+
+```{r}
+#| label: tbl-completion
+#| tbl-cap: "Program Completion Status at Exit, by Period"
+make_period_table(
+    exit,
+    "project_completion_status",
+    "Program Completion Status"
+)
+```
+
+## Counseling
+
+Counseling receipt is recorded when a participant leaves the program and captures whether the participant received any counseling services during their enrollment. This information is required for participants who are 18 or older, or who are listed as the head of their household.
+
+```{r}
+#| label: tbl-counseling
+#| tbl-cap: "Counseling Services Received During Enrollment, by Period"
+make_period_table(
+    exit,
+    "counseling_received",
+    "Counseling Received"
+)
+```
+
+## Safe and Appropriate Exit
+
+This question captures whether both the program worker and the participant felt the exit was safe and appropriate. The table cross-references both perspectives, showing how often each combination of worker and participant assessments occurred. Percentages are calculated out of all exits within each period. "NR" indicates that a response was not recorded.
+
+```{r}
+#| label: tbl-safe-exit
+#| tbl-cap: "Safe and Appropriate Exit: Worker and Participant Assessment, by Period"
+make_safe_exit_table(exit)
+```
+
+```{=typst}
+#pagebreak()
+#set page(flipped: true)
+#show table: set text(size: 10pt)
+```
+
+# Appendix {#appendix}
+
+## Enrollments by Project
+
+```{r}
+dm$enrollment |>
+    dplyr::count(period, organization_name, project_name) |>
+    tidyr::pivot_wider(names_from = period, values_from = n, values_fill = 0) |>
+    dplyr::arrange(organization_name, project_name) |>
+    gt::gt(groupname_col = "organization_name") |>
+    gt::grand_summary_rows(
+        columns = dplyr::where(is.numeric),
+        fns = list(Total = ~ sum(.))
+    ) |>
+    gt::cols_label(project_name = "Project Name")
+```
+
+```{=typst}
+#set page(flipped: false)
+#show table: set text(size: 11pt)
+```
