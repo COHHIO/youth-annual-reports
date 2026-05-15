@@ -40,7 +40,12 @@ clients_per_period <- targets::tar_read(client_count_per_period)
 
 clients_per_period |>
     gt::gt() |>
-    gt::cols_label(period = "Period")
+    gt::cols_label(period = "Period") |>
+    gt::fmt_integer(columns = dplyr::where(is.numeric)) |>
+    gt::tab_style(
+        style = gt::cell_text(weight = "bold"),
+        locations = gt::cells_column_labels()
+    )
 ```
 
 Youth served multiple times — whether across projects within the same organization or within the same project — are counted only once. However, youth who appear across projects from different organizations cannot be deduplicated, so they may be counted more than once.
@@ -55,7 +60,11 @@ Gender is a multiple-choice field, so a youth may be counted under more than one
 targets::tar_read(gender) |>
     count_by_period(gender, clients_per_period) |>
     gt::gt() |>
-    gt::cols_label(gender = "Gender")
+    gt::cols_label(gender = "Gender") |>
+    gt::tab_style(
+        style = gt::cell_text(weight = "bold"),
+        locations = gt::cells_column_labels()
+    )
 ```
 
 ## Age
@@ -68,7 +77,11 @@ For each youth, age is calculated at the time of their first entry into any proj
 targets::tar_read(client) |>
     count_by_period(age_grouped, clients_per_period) |>
     gt::gt() |>
-    gt::cols_label(age_grouped = "Age")
+    gt::cols_label(age_grouped = "Age") |>
+    gt::tab_style(
+        style = gt::cell_text(weight = "bold"),
+        locations = gt::cells_column_labels()
+    )
 ```
 
 ## Ethnicity
@@ -85,7 +98,11 @@ Ethnicity is a multiple-choice field, so a youth may be counted under more than 
 targets::tar_read(ethnicity) |>
     count_by_period(ethnicity, clients_per_period) |>
     gt::gt() |>
-    gt::cols_label(ethnicity = "Ethnicity")
+    gt::cols_label(ethnicity = "Ethnicity") |>
+    gt::tab_style(
+        style = gt::cell_text(weight = "bold"),
+        locations = gt::cells_column_labels()
+    )
 ```
 
 ```{=typst}
@@ -103,7 +120,12 @@ dm$client |>
     dplyr::filter(veteran_status == "Yes") |>
     dplyr::count(period) |>
     gt::gt() |>
-    gt::cols_label(period = "Period", n = "Veterans Served")
+    gt::cols_label(period = "Period", n = "Veterans Served") |>
+    gt::fmt_integer(columns = dplyr::where(is.numeric)) |>
+    gt::tab_style(
+        style = gt::cell_text(weight = "bold"),
+        locations = gt::cells_column_labels()
+    )
 ```
 
 ## Enrollments
@@ -118,7 +140,12 @@ dm$client |>
     tidyr::pivot_wider(names_from = period, values_from = n, values_fill = 0) |>
     dplyr::arrange(n_enrollments) |>
     gt::gt() |>
-    gt::cols_label(n_enrollments = "Enrollments")
+    gt::cols_label(n_enrollments = "Enrollments") |>
+    gt::fmt_integer(columns = dplyr::where(is.numeric)) |>
+    gt::tab_style(
+        style = gt::cell_text(weight = "bold"),
+        locations = gt::cells_column_labels()
+    )
 ```
 
 The following table shows the total number of enrollments per period, which reflects all enrollments across projects rather than the number of unique youth.
@@ -130,7 +157,12 @@ enrollment_count_per_period <- targets::tar_read(enrollment_count_per_period)
 
 enrollment_count_per_period |>
     gt::gt() |>
-    gt::cols_label(period = "Period")
+    gt::cols_label(period = "Period") |>
+    gt::fmt_integer(columns = dplyr::where(is.numeric)) |>
+    gt::tab_style(
+        style = gt::cell_text(weight = "bold"),
+        locations = gt::cells_column_labels()
+    )
 ```
 
 For a detailed breakdown of enrollments by project, see the [Appendix](#appendix).
@@ -149,7 +181,12 @@ dm$enrollment |>
     ) |>
     dplyr::count(period, name = "N") |>
     gt::gt() |>
-    gt::cols_label(period = "Period")
+    gt::cols_label(period = "Period") |>
+    gt::fmt_integer(columns = dplyr::where(is.numeric)) |>
+    gt::tab_style(
+        style = gt::cell_text(weight = "bold"),
+        locations = gt::cells_column_labels()
+    )
 ```
 
 ## Exits
@@ -163,7 +200,12 @@ exit_count_per_period <- targets::tar_read(exit_count_per_period)
 
 exit_count_per_period |>
     gt::gt() |>
-    gt::cols_label(period = "Period")
+    gt::cols_label(period = "Period") |>
+    gt::fmt_integer(columns = dplyr::where(is.numeric)) |>
+    gt::tab_style(
+        style = gt::cell_text(weight = "bold"),
+        locations = gt::cells_column_labels()
+    )
 ```
 
 As with enrollments, head of household and adult exits are shown separately below, since several survey items are collected at exit for this group only.
@@ -178,7 +220,12 @@ dm$exit |>
     ) |>
     dplyr::count(period, name = "N") |>
     gt::gt() |>
-    gt::cols_label(period = "Period")
+    gt::cols_label(period = "Period") |>
+    gt::fmt_integer(columns = dplyr::where(is.numeric)) |>
+    gt::tab_style(
+        style = gt::cell_text(weight = "bold"),
+        locations = gt::cells_column_labels()
+    )
 ```
 
 ```{=typst}
@@ -575,7 +622,12 @@ dm$enrollment |>
         fns = list(Total = ~ sum(.)),
         fmt = list(~ gt::fmt_integer(.))
     ) |>
-    gt::cols_label(project_name = "Project Name")
+    gt::cols_label(project_name = "Project Name") |>
+    gt::fmt_integer(columns = dplyr::where(is.numeric)) |>
+    gt::tab_style(
+        style = gt::cell_text(weight = "bold"),
+        locations = gt::cells_column_labels()
+    )
 ```
 
 ```{=typst}
