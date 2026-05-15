@@ -8,7 +8,7 @@ count_by_period <- function(data, col, clients_per_period) {
     data |>
         dplyr::count(period, !!col) |>
         dplyr::left_join(clients_per_period, by = "period") |>
-        dplyr::mutate(value = sprintf("%d (%.1f%%)", n, n / N * 100)) |>
+        dplyr::mutate(value = sprintf("%s (%.1f%%)", formatC(n, format = "d", big.mark = ","), n / N * 100)) |>
         dplyr::select(period, !!col, value) |>
         tidyr::pivot_wider(names_from = period, values_from = value, values_fill = "0 (0.0%)") |>
         dplyr::arrange(!!col)
@@ -127,7 +127,7 @@ make_period_table <- function(data, col, label = col) {
         )
 }
 
-fmt_cell <- function(n, total) sprintf("%d (%.1f%%)", n, n / total * 100)
+fmt_cell <- function(n, total) sprintf("%s (%.1f%%)", formatC(n, format = "d", big.mark = ","), n / total * 100)
 
 prep_tbl <- function(df, col) {
     df <- df |>
