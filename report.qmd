@@ -16,6 +16,7 @@ dm <- targets::tar_read(dm)
 ```{r}
 source("R/utils.R")
 source("R/utils_disabilities.R")
+source("R/utils_enrollment.R")
 source("R/utils_exit.R")
 ```
 
@@ -186,6 +187,25 @@ dm$exit |>
 #show table: set text(size: 8pt)
 ```
 
+## Living Situation
+
+Living situation is collected at program entry and exit and is required for participants who are 18 or older, or who are listed as the head of their household. It captures where the participant was staying immediately before entering the program and where they went upon leaving.
+
+```{r}
+#| label: tbl-living-situation
+#| tbl-cap: "Living Situation at Program Entry and Exit, by Period"
+
+enrollment <- targets::tar_read(enrollment)
+exit <- targets::tar_read(exit)
+
+make_start_exit_table(
+    enrollment,
+    exit,
+    "living_situation_grouped",
+    "Living Situation Grouped"
+)
+```
+
 # Data Elements Analysis
 
 ## Income, Benefits and Insurance
@@ -290,6 +310,20 @@ make_period_table(
 )
 ```
 
+## Referral Source
+
+Referral source is collected when participants enter the program and is required for participants who are 18 or older, or who are listed as the head of their household. It captures how the participant first learned about or was connected to the program.
+
+```{r}
+#| label: tbl-referral-source
+#| tbl-cap: "Referral Source at Program Entry, by Period"
+make_period_table(
+    enrollment,
+    "referral_source",
+    "Referral Source"
+)
+```
+
 ## Education
 
 Education information is collected when participants enter and when they leave the program. It is required for participants who are 18 or older, or who are listed as the head of their household. The first table shows the highest level of education completed; the second shows current school enrollment status.
@@ -341,6 +375,8 @@ make_start_exit_table(
 
 Self-reported health status across three areas — general, dental, and mental health — is collected when participants enter and when they leave the program. This information is required for participants who are 18 or older, or who are listed as the head of their household.
 
+### General Health Status
+
 ```{r}
 #| label: tbl-health-general
 #| tbl-cap: "General Health Status at Program Entry and Exit, by Period"
@@ -354,6 +390,8 @@ make_start_exit_table(
 )
 ```
 
+### Dental Health Status
+
 ```{r}
 #| label: tbl-health-dental
 #| tbl-cap: "Dental Health Status at Program Entry and Exit, by Period"
@@ -364,6 +402,8 @@ make_start_exit_table(
     "Dental Health Status"
 )
 ```
+
+### Mental Health Status
 
 ```{r}
 #| label: tbl-health-mental
@@ -376,13 +416,51 @@ make_start_exit_table(
 )
 ```
 
+### Pregnancy Status
+
+Pregnancy status is collected when participants enter the program and is required for participants who are 18 or older, or who are listed as the head of their household.
+
+```{r}
+#| label: tbl-pregnancy-status
+#| tbl-cap: "Pregnancy Status at Program Entry, by Period"
+make_period_table(
+    health$start,
+    "pregnancy_status",
+    "Pregnant"
+)
+```
+
+## Formerly a Ward of Child Welfare/Foster Care Agency
+
+This information is collected when participants enter the program and is required for participants who are 18 or older, or who are listed as the head of their household. It captures whether the participant was ever placed in the care of a child welfare or foster care agency.
+
+```{r}
+#| label: tbl-former-ward-child-welfare
+#| tbl-cap: "Former Ward of Child Welfare or Foster Care at Program Entry, by Period"
+make_period_table(
+    enrollment,
+    "former_ward_child_welfare",
+    "Former Ward Child Welfare"
+)
+```
+
+## Formerly a Ward of Juvenile Justice System
+
+This information is collected when participants enter the program and is required for participants who are 18 or older, or who are listed as the head of their household. It captures whether the participant was ever under the supervision of the juvenile justice system.
+
+```{r}
+#| label: tbl-former-ward-juvenile-justice
+#| tbl-cap: "Former Ward of Juvenile Justice System at Program Entry, by Period"
+make_period_table(
+    enrollment,
+    "former_ward_juvenile_justice",
+    "Former Ward Juvenile Justice"
+)
+```
+
 ## Commercial Sexual Exploitation / Sex Trafficking
 
 These questions are asked when participants leave the program and are required for participants who are 18 or older, or who are listed as the head of their household. The first table shows whether a participant reported exchanging sex for resources such as shelter, food, or money. The second table is limited to those who responded "Yes" and shows whether they reported being asked or forced to do so.
-
-```{r}
-exit <- targets::tar_read(exit)
-```
 
 ```{r}
 #| label: tbl-sex-exchange

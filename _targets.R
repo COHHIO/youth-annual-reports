@@ -125,6 +125,10 @@ list(
         command = process_employment_data(dm, hoh_and_or_adult)
     ),
     tar_target(
+        name = enrollment,
+        command = process_enrollment_data(dm, hoh_and_or_adult)
+    ),
+    tar_target(
         name = exit,
         command = process_exit_data(dm, hoh_and_or_adult)
     ),

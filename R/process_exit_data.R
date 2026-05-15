@@ -25,7 +25,8 @@ process_exit_data <- function(dm, hoh_and_or_adult) {
             coerced_to_continue_work,
             counseling_received,
             destination_safe_client,
-            destination_safe_worker
+            destination_safe_worker,
+            destination
         ) |>
         dplyr::semi_join(hoh_and_or_adult, by = c("personal_id", "organization_id", "period")) |>
         dplyr::mutate(
@@ -54,6 +55,28 @@ process_exit_data <- function(dm, hoh_and_or_adult) {
                     ),
                     ordered = TRUE
                 )
+        ) |>
+        # Bucket Living Situation categories
+        dplyr::left_join(
+            get_living_codes() |>
+                dplyr::select(
+                    description = Description,
+                    living_situation_grouped = ExitCategory
+                ),
+            by = c("destination" = "description")
+        ) |>
+        dplyr::mutate(
+            living_situation_grouped = recode_factor(
+                living_situation_grouped,
+                levels = c(
+                    "Permanent",
+                    "Temporary",
+                    "Institutional",
+                    "Homeless",
+                    "Other",
+                    "Data not collected"
+                )
+            )
         )
 
     processed
