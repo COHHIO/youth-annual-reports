@@ -9,7 +9,7 @@
 	// Install the `arf` R terminal and R packages for developing in VScode
 	"postCreateCommand": {
 	    "arf": "apt-get update -qq && apt-get install -y -qq curl xz-utils && curl --proto '=https' --tlsv1.2 -LsSf https://github.com/eitsupi/arf/releases/latest/download/arf-console-installer.sh | sh",
-	    "r-packages": "R -q -e \"pak::pkg_install(c('dplyr', 'tidyr', 'ggplot2', 'languageserver', 'rmarkdown', 'gt', 'lubridate', 'quarto', 'DBI', 'RPostgres', 'usethis', 'targets'))\""
+	    "r-packages": "R -q -e \"pak::pkg_install(c('dplyr', 'tidyr', 'ggplot2', 'languageserver', 'rmarkdown', 'gt', 'lubridate', 'quarto', 'DBI', 'RPostgres', 'usethis', 'targets', 'tarchetypes'))\""
 	},
 
 	// Configure tool-specific properties.
@@ -27,11 +27,11 @@
 					"editor.formatOnSave": true,
 					"editor.defaultFormatter": "Posit.air-vscode",
 					"editor.folding": false,
-					"editor.wordWrap": "on",
+					"editor.wordWrap": "off",
 					"editor.rulers": [{"column": 80}, {"column": 120}]
 				},
 				"[quarto]": {
-					"editor.formatOnSave": true,
+					"editor.formatOnSave": false,
 					"editor.defaultFormatter": "quarto.quarto"
 				},
 				"files.trimTrailingWhitespace": true,
